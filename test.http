@@ -1,0 +1,114 @@
+### 1. CRÉER UN VENDEUR (Moussa)
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+    "phone": "770000001",
+    "password": "pass",
+    "full_name": "Moussa Diop (Vendeur)"
+}
+
+### 1. Créer le monde (Catégories & Entrepôt)
+GET http://localhost:3000/setup-categories
+###
+GET http://localhost:3000/setup-warehouse
+
+### 2. Inscription Grand-Père (ID 1)
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{ "phone": "77001", "password": "pass", "full_name": "Grand-Père" }
+
+### 3. Inscription Papa (ID 2) avec code Grand-Père
+# (On suppose que tu récupères le code manuellement, mais ici on va créer sans parrain pour simplifier, 
+# car pour tester le délai, le Cashback suffit)
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{ "phone": "77002", "password": "pass", "full_name": "Papa" }
+
+### 4. Inscription Fatou (ID 3)
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{ "phone": "77003", "password": "pass", "full_name": "Fatou" }
+
+### 5. Papa vend un produit (ID Vendeur = 2)
+POST http://localhost:3000/products
+Content-Type: application/json
+{
+    "seller_id": 2,
+    "category_id": 1,
+    "title": "Télévision 4K",
+    "description": "Superbe TV",
+    "base_price": 100000,
+    "variants": []
+}
+
+### 6. Fatou (ID 3) achète la TV (Variante ID 1)
+POST http://localhost:3000/orders
+Content-Type: application/json
+{
+    "buyer_id": 3,
+    "payment_method": "COD",
+    "items": [{ "variant_id": 1, "quantity": 1 }]
+}
+
+### 7. Fatou paie le transport (Validation Commande)
+POST http://localhost:3000/pay-shipping
+Content-Type: application/json
+
+{ "order_id": 1, "provider": "WAVE", "phone_number": "77003" }
+
+### 8. Papa dépose le colis (Check-in Entrepôt)
+POST http://localhost:3000/warehouse/check-in
+Content-Type: application/json
+
+{ "order_item_id": 1, "agent_id": 99, "warehouse_id": 1, "status_check": "OK" }
+
+### 9. LIVRAISON TERMINÉE ! (C'est là que l'argent arrive)
+POST http://localhost:3000/delivery/confirm
+Content-Type: application/json
+
+{ "order_id": 1, "driver_id": 55 }
+
+### 10. VÉRIFICATION 1 : L'argent doit être BLOQUÉ
+# Regarde "solde_disponible" (doit être 0) et "solde_en_attente" (doit être 1000)
+GET http://localhost:3000/my-wallet/3
+
+### 11. LE TEMPS PASSE (Simulation 72h plus tard...)
+# On appuie sur le bouton Admin pour tout valider
+POST http://localhost:3000/admin/process-commissions
+
+### 12. VÉRIFICATION 2 : L'argent doit être DISPONIBLE
+# Regarde "solde_disponible" (doit être 1000)
+GET http://localhost:3000/my-wallet/3
+
+### AJOUTER UN PRODUIT (iPhone 13)
+POST http://localhost:3000/products
+Content-Type: application/json
+
+{
+    "seller_id": 1,
+    "category_id": 1,
+    "title": "iPhone 13 Pro Max - 256Go",
+    "description": "État neuf, vendu avec garantie.",
+    "base_price": 650000,
+    "variants": [
+        { "sku_suffix": "BLUE", "price": 650000, "stock": 5, "attributes": {"color": "Bleu Alpin"} },
+        { "sku_suffix": "GOLD", "price": 660000, "stock": 2, "attributes": {"color": "Or"} }
+    ]
+}
+
+### AJOUTER UN AUTRE PRODUIT (Smart TV)
+POST http://localhost:3000/products
+Content-Type: application/json
+
+{
+    "seller_id": 1,
+    "category_id": 2,
+    "title": "Samsung Smart TV 55 pouces 4K",
+    "description": "Télévision intelligente, Netflix intégré.",
+    "base_price": 350000,
+    "variants": []
+}
